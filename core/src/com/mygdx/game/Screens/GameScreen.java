@@ -12,90 +12,42 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer;
+import com.badlogic.gdx.math.Vector3;
+import com.mygdx.game.Entities.Pacman;
 import com.mygdx.game.Enums.Direction;
+import com.mygdx.game.Enums.TileType;
+import com.mygdx.game.GameMap;
 import com.mygdx.game.MyGdxGame;
+import com.mygdx.game.TiledGameMap;
 
 public class GameScreen implements Screen {
-    public static final int FRAME_COLS = 14, FRAME_ROWS = 13;
-    public static final float SPEED = 400;
-    public static final float ANIMATION_SPEED = 0.06f;
+    GameMap gameMap;
     public static final int SIZE_PIXEL = 16;
-    public static final int SIZE = SIZE_PIXEL * 2;
-
-    TiledMap map;
-    TiledMapRenderer mapRenderer;
+    public static final int SIZE = SIZE_PIXEL * 3;
     OrthographicCamera camera;
-    Direction DIRECTION;
-    Animation<TextureRegion>[] moveAnimation;
     Texture texture;
     int frame;
     boolean animLoop;
-    float stateTime;
     float x;
     float y;
 
     MyGdxGame game;
+    Pacman hero;
 
     public GameScreen(MyGdxGame game) {
         this.game = game;
-        y = 50;
+        y = 200;
         x = MyGdxGame.WIDTH / 2 - SIZE / 2;
+
+        gameMap = new TiledGameMap();
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 28, 36);
+//        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.update();
 
-        map = new TmxMapLoader().load("map.tmx");
+        hero = new Pacman(Gdx.graphics.getWidth() / 2 - SIZE / 2, 200, 200, Direction.LEFT);
 
-        mapRenderer = new OrthoCachedTiledMapRenderer(map, 1/16f);
-
-        texture = new Texture("sprites.png");
-
-        System.out.println(texture.getWidth() + " " + texture.getHeight());
-
-        // create 2d array of textures
-        TextureRegion[][] frameSpriteSheet = TextureRegion.split(texture,
-                texture.getWidth() / FRAME_COLS,
-                texture.getHeight() / FRAME_ROWS);
-
-        // create array of textures for animation loop(selected from above 2d array)
-        TextureRegion[] moveFramesUP = new TextureRegion[]{
-                frameSpriteSheet[0][2],
-                frameSpriteSheet[2][1],
-                frameSpriteSheet[2][0],
-                frameSpriteSheet[2][1]
-        };
-
-        TextureRegion[] moveFramesDOWN = new TextureRegion[]{
-                frameSpriteSheet[0][2],
-                frameSpriteSheet[3][1],
-                frameSpriteSheet[3][0],
-                frameSpriteSheet[3][1]
-        };
-
-        TextureRegion[] moveFramesRIGHT = new TextureRegion[]{
-                frameSpriteSheet[0][2],
-                frameSpriteSheet[0][1],
-                frameSpriteSheet[0][0],
-                frameSpriteSheet[0][1]
-        };
-
-        TextureRegion[] moveFramesLEFT = new TextureRegion[]{
-                frameSpriteSheet[0][2],
-                frameSpriteSheet[1][1],
-                frameSpriteSheet[1][0],
-                frameSpriteSheet[1][1]
-        };
-
-        frame = 1;
-        moveAnimation = new Animation[4];
-
-        moveAnimation[0] = new Animation<TextureRegion>(ANIMATION_SPEED, moveFramesRIGHT);
-        moveAnimation[1] = new Animation<TextureRegion>(ANIMATION_SPEED, moveFramesLEFT);
-        moveAnimation[2] = new Animation<TextureRegion>(ANIMATION_SPEED, moveFramesUP);
-        moveAnimation[3] = new Animation<TextureRegion>(ANIMATION_SPEED, moveFramesDOWN);
-
-        DIRECTION = Direction.LEFT;
     }
 
     @Override
@@ -111,8 +63,7 @@ public class GameScreen implements Screen {
         camera.update();
 
         // rendering map
-        mapRenderer.setView(camera);
-        mapRenderer.render();
+        gameMap.render(camera);
 
         animLoop = true;
 
@@ -134,36 +85,25 @@ public class GameScreen implements Screen {
             animLoop = false;
         }
 
+        if(Gdx.input.isTouched()) {
+            Vector3 pos = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            TileType type = gameMap.getTileTypeByLocation(0, pos.x, pos.y);
 
-        // Movement code
-        x += SPEED * Gdx.graphics.getDeltaTime() * DIRECTION.getxDirection();
-        y += SPEED * Gdx.graphics.getDeltaTime() * DIRECTION.getyDirection();
-
-
-
-        if(Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
-            DIRECTION = Direction.UP;
-            frame = 2;
-        }
-        else if(Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
-            DIRECTION = Direction.DOWN;
-            frame = 3;
-        }
-        else if(Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
-            DIRECTION = Direction.RIGHT;
-            frame = 0;
-        }
-        else if(Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
-            DIRECTION = Direction.LEFT;
-            frame = 1;
+            if(type != null) {
+                System.out.println("Tile: " + type.getName());
+            }
         }
 
-        stateTime += delta;
+        hero.render(game.batch);
+        hero.update(Gdx.graphics.getDeltaTime());
+        hero.move();
+
+
 
         // render code
         game.batch.begin();
 
-        game.batch.draw(moveAnimation[frame].getKeyFrame(stateTime, animLoop), x, y, SIZE, SIZE);
+//        game.batch.draw(moveAnimation[frame].getKeyFrame(stateTime, animLoop), x, y, SIZE, SIZE);
 
         game.batch.end();
     }

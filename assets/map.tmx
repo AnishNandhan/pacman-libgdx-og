@@ -3,7 +3,7 @@
  <tileset firstgid="1" name="coltiles" tilewidth="16" tileheight="16" tilecount="6" columns="6">
   <image source="coltiles.png" width="96" height="16"/>
  </tileset>
- <layer id="1" name="Tile Layer 1" width="28" height="36" visible="0">
+ <layer id="1" name="Tile Layer 1" width="28" height="36">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
